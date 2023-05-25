@@ -5,6 +5,28 @@ use std::arch::x86_64::*;
 
 use crate::simd::SIMDField;
 
+#[cfg(feature = "use-sse")]
+fn sse_round<T: SIMDField>() -> usize {
+    match T::size_in_bits() {
+        8 => 128 / 8,
+        16 => 128 / 16,
+        32 => 128 / 32,
+        64 => 128 / 64,
+        _ => unreachable!(),
+    }
+}
+
+#[cfg(feature = "use-avx2")]
+fn avx_round<T: SIMDField>() -> usize {
+    match T::size_in_bits() {
+        8 => 256 / 8,
+        16 => 256 / 16,
+        32 => 256 / 32,
+        64 => 256 / 64,
+        _ => unreachable!(),
+    }
+}
+
 #[cfg(all(
     any(feature = "use-sse", feature = "use-avx2"),
     all(
@@ -43,28 +65,6 @@ pub fn linear_search<T: SIMDField>(nums: &[T], target: T) -> Option<usize> {
                 _ => unreachable!(),
             }
         }
-    }
-}
-
-#[cfg(feature = "use-sse")]
-fn sse_round<T: SIMDField>() -> usize {
-    match T::size_in_bits() {
-        8 => 128 / 8,
-        16 => 128 / 16,
-        32 => 128 / 32,
-        64 => 128 / 64,
-        _ => unreachable!(),
-    }
-}
-
-#[cfg(feature = "use-avx2")]
-fn avx_round<T: SIMDField>() -> usize {
-    match T::size_in_bits() {
-        8 => 256 / 8,
-        16 => 256 / 16,
-        32 => 256 / 32,
-        64 => 256 / 64,
-        _ => unreachable!(),
     }
 }
 
@@ -390,7 +390,7 @@ unsafe fn linear_64bits_avx<T: SIMDField>(
 }
 
 #[inline]
-fn linear_search_generic<T: num::Integer + SIMDField>(
+pub fn linear_search_generic<T: num::Integer + SIMDField>(
     nums: &[T],
     target: &T,
     from: usize,
