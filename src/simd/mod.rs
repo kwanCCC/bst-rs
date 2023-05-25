@@ -1,7 +1,10 @@
+pub use linear::{linear_search, linear_search_generic};
+pub use simd_bst::binary_search;
+
 mod linear;
 mod simd_bst;
 
-pub trait SIMDField: Sized + Copy + num::Integer + num::ToPrimitive {
+pub trait SIMDField: Sized + Copy + num::Integer {
     fn size_in_bits() -> usize;
 
     fn unchecked_i8(self) -> i8;
