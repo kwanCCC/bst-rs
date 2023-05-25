@@ -2,7 +2,7 @@ mod linear;
 mod simd_bst;
 
 pub trait SIMDField: Sized + Copy + num::Integer + num::ToPrimitive {
-    fn size_in_bytes() -> usize;
+    fn size_in_bits() -> usize;
 
     fn unchecked_i8(self) -> i8;
 
@@ -21,11 +21,10 @@ pub trait SIMDField: Sized + Copy + num::Integer + num::ToPrimitive {
     fn unchecked_u64(self) -> u64;
 }
 
-
 macro_rules! simd_suit {
     ($t:ty, $size:expr) => {
         impl SIMDField for $t {
-            fn size_in_bytes() -> usize {
+            fn size_in_bits() -> usize {
                 $size
             }
 
