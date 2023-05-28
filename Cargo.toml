@@ -13,6 +13,14 @@ description = "another blazing fast binary search algorithm through SIMDs"
 [dependencies]
 num = { version = "0.4", default-feature = false, features = ["std"] }
 
+[dev-dependencies]
+criterion = { version = "0.4", features = ["html_reports"] }
+lazy_static = "1.4.0"
+
+[[bench]]
+name = "bench_bst"
+harness = false
+
 [features]
 default = ["std", "use-sse"]
 std = ["num/std"]
