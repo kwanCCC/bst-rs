@@ -1,4 +1,4 @@
-use crate::simd::SIMDField;
+pub use crate::simd::SIMDField;
 
 mod simd;
 
@@ -7,10 +7,7 @@ pub fn binary_search_auto<T: SIMDField>(nums: &[T], target: T) -> Option<usize> 
     let field_size = T::size_in_bits();
     let total_size = len as u64 * field_size as u64;
     match total_size {
-        total_size if total_size == field_size as u64 => {
-            simd::linear_search_generic(nums, &target, 0)
-        }
-        total_size if total_size < 256 * 8 => simd::linear_search(nums, target),
+        total_size if total_size <= 128 * 1024 => simd::linear_search(nums, target),
         _ => simd::binary_search(nums, target),
     }
 }

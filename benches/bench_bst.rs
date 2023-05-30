@@ -1,9 +1,11 @@
+#![allow(non_upper_case_globals)]
+
 #[macro_use]
 extern crate criterion;
 #[macro_use]
 extern crate lazy_static;
 
-use criterion::{black_box, Bencher, BenchmarkId, Criterion, Throughput};
+use criterion::{black_box, Bencher, BenchmarkId, Criterion};
 
 use bst_rs::*;
 
@@ -54,50 +56,17 @@ fn gen_u64s(size: usize) -> Vec<u64> {
     (0..size as u64).into_iter().collect::<Vec<_>>()
 }
 
-fn do_8bit_bench(b: &mut Bencher, nums: &[u8]) {
-    let mut r = 0usize;
+fn do_simd_bench<T: SIMDField>(b: &mut Bencher, nums: &[T]) {
+    let last = nums.last().unwrap();
+    let last = *last;
     b.iter(|| {
-        r = r.wrapping_mul(1664525).wrapping_add(1013904223);
-        let i = r % nums.len();
-        black_box(binary_search_auto(&nums, i as u8).is_some())
-    });
-}
-
-fn do_16_bench(b: &mut Bencher, nums: &[u16]) {
-    let mut r = 0usize;
-    b.iter(|| {
-        r = r.wrapping_mul(1664525).wrapping_add(1013904223);
-        let i = r % nums.len();
-        black_box(binary_search_auto(&nums, i as u16).is_some())
-    });
-}
-
-fn do_32_bench(b: &mut Bencher, nums: &[u32]) {
-    let mut r = 0usize;
-    b.iter(|| {
-        r = r.wrapping_mul(1664525).wrapping_add(1013904223);
-        let i = r % nums.len();
-        black_box(binary_search_auto(&nums, i as u32).is_some())
-    });
-}
-
-fn do_64_bench(b: &mut Bencher, nums: &[u64]) {
-    let mut r = 0usize;
-    b.iter(|| {
-        r = r.wrapping_mul(1664525).wrapping_add(1013904223);
-        let i = r % nums.len();
-        black_box(binary_search_auto(&nums, i as u64).is_some())
+        black_box(binary_search_auto(&nums, last).is_some());
     });
 }
 
 fn do_std_bench<T: num::Integer + num::FromPrimitive>(b: &mut Bencher, nums: &[T]) {
-    let mut r = 0usize;
-    b.iter(|| {
-        r = r.wrapping_mul(1664525).wrapping_add(1013904223);
-        let i = r % nums.len();
-        let i = T::from_usize(i).unwrap();
-        black_box(nums.binary_search(&i).is_ok())
-    });
+    let last = nums.last().unwrap();
+    b.iter(|| black_box(nums.binary_search(last).is_ok()));
 }
 
 fn optimize_bst_bench(c: &mut Criterion, label: &str) {
@@ -108,110 +77,110 @@ fn optimize_bst_bench(c: &mut Criterion, label: &str) {
     group.bench_with_input(
         BenchmarkId::new("optimize_on_8bit", 4),
         &**U8x4,
-        do_8bit_bench,
+        do_simd_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("optimize_on_8bit", 16),
-        &U8x16,
-        do_8bit_bench,
+        &**U8x16,
+        do_simd_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("optimize_on_8bit", 128),
-        &U8x128,
-        do_8bit_bench,
+        &**U8x128,
+        do_simd_bench,
     );
     //
     group.bench_with_input(
         BenchmarkId::new("optimize_on_16bit", 4),
-        &U16x4,
-        do_16_bench,
+        &**U16x4,
+        do_simd_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("optimize_on_16bit", 16),
-        &U16x16,
-        do_16_bench,
+        &**U16x16,
+        do_simd_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("optimize_on_16bit", 128),
-        &U16x128,
-        do_16_bench,
+        &**U16x128,
+        do_simd_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("optimize_on_16bit", 512),
-        &U16x512,
-        do_16_bench,
+        &**U16x512,
+        do_simd_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("optimize_on_16bit", 2048),
-        &U16x2048,
-        do_16_bench,
+        &**U16x2048,
+        do_simd_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("optimize_on_16bit", 8192),
-        &U16x8192,
-        do_16_bench,
+        &**U16x8192,
+        do_simd_bench,
     );
     //
     group.bench_with_input(
         BenchmarkId::new("optimize_on_32bit", 4),
-        &U32x4,
-        do_32_bench,
+        &**U32x4,
+        do_simd_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("optimize_on_32bit", 16),
-        &U32x16,
-        do_32_bench,
+        &**U32x16,
+        do_simd_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("optimize_on_32bit", 128),
-        &U32x128,
-        do_32_bench,
+        &**U32x128,
+        do_simd_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("optimize_on_32bit", 512),
-        &U32x512,
-        do_32_bench,
+        &**U32x512,
+        do_simd_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("optimize_on_32bit", 2048),
-        &U32x2048,
-        do_32_bench,
+        &**U32x2048,
+        do_simd_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("optimize_on_32bit", 8192),
-        &U32x8192,
-        do_32_bench,
+        &**U32x8192,
+        do_simd_bench,
     );
     //
     group.bench_with_input(
         BenchmarkId::new("optimize_on_64bit", 4),
-        &U64x4,
-        do_64_bench,
+        &**U64x4,
+        do_simd_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("optimize_on_64bit", 16),
-        &U64x16,
-        do_64_bench,
+        &**U64x16,
+        do_simd_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("optimize_on_64bit", 128),
-        &U64x128,
-        do_64_bench,
+        &**U64x128,
+        do_simd_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("optimize_on_64bit", 512),
-        &U64x512,
-        do_64_bench,
+        &**U64x512,
+        do_simd_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("optimize_on_64bit", 2048),
-        &U64x2048,
-        do_64_bench,
+        &**U64x2048,
+        do_simd_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("optimize_on_64bit", 8192),
-        &U64x8192,
-        do_64_bench,
+        &**U64x8192,
+        do_simd_bench,
     );
     group.finish();
 }
@@ -221,77 +190,93 @@ fn std_bst_bench(c: &mut Criterion, label: &str) {
     group
         .warm_up_time(std::time::Duration::from_millis(500))
         .measurement_time(std::time::Duration::from_secs(10));
-    group.bench_with_input(BenchmarkId::new("std_on_8bit", 4), &U8x4, do_std_bench);
-    group.bench_with_input(BenchmarkId::new("std_on_8bit", 16), &U8x16, do_std_bench);
-    group.bench_with_input(BenchmarkId::new("std_on_8bit", 128), &U8x128, do_std_bench);
+    group.bench_with_input(BenchmarkId::new("std_on_8bit", 4), &**U8x4, do_std_bench);
+    group.bench_with_input(BenchmarkId::new("std_on_8bit", 16), &**U8x16, do_std_bench);
+    group.bench_with_input(
+        BenchmarkId::new("std_on_8bit", 128),
+        &**U8x128,
+        do_std_bench,
+    );
     //
     //
-    group.bench_with_input(BenchmarkId::new("std_on_16bit", 4), &U16x4, do_std_bench);
-    group.bench_with_input(BenchmarkId::new("std_on_16bit", 16), &U16x16, do_std_bench);
+    group.bench_with_input(BenchmarkId::new("std_on_16bit", 4), &**U16x4, do_std_bench);
+    group.bench_with_input(
+        BenchmarkId::new("std_on_16bit", 16),
+        &**U16x16,
+        do_std_bench,
+    );
     group.bench_with_input(
         BenchmarkId::new("std_on_16bit", 128),
-        &U16x128,
+        &**U16x128,
         do_std_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("std_on_16bit", 512),
-        &U16x512,
+        &**U16x512,
         do_std_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("std_on_16bit", 2048),
-        &U16x2048,
+        &**U16x2048,
         do_std_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("std_on_16bit", 8192),
-        &U16x8192,
+        &**U16x8192,
         do_std_bench,
     );
     //
-    group.bench_with_input(BenchmarkId::new("std_on_32bit", 4), &U32x4, do_std_bench);
-    group.bench_with_input(BenchmarkId::new("std_on_32bit", 16), &U32x16, do_std_bench);
+    group.bench_with_input(BenchmarkId::new("std_on_32bit", 4), &**U32x4, do_std_bench);
+    group.bench_with_input(
+        BenchmarkId::new("std_on_32bit", 16),
+        &**U32x16,
+        do_std_bench,
+    );
     group.bench_with_input(
         BenchmarkId::new("std_on_32bit", 128),
-        &U32x128,
+        &**U32x128,
         do_std_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("std_on_32bit", 512),
-        &U32x512,
+        &**U32x512,
         do_std_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("std_on_32bit", 2048),
-        &U32x2048,
+        &**U32x2048,
         do_std_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("std_on_32bit", 8192),
-        &U32x8192,
+        &**U32x8192,
         do_std_bench,
     );
     //
-    group.bench_with_input(BenchmarkId::new("std_on_64bit", 4), &U64x4, do_std_bench);
-    group.bench_with_input(BenchmarkId::new("std_on_64bit", 16), &U64x16, do_std_bench);
+    group.bench_with_input(BenchmarkId::new("std_on_64bit", 4), &**U64x4, do_std_bench);
+    group.bench_with_input(
+        BenchmarkId::new("std_on_64bit", 16),
+        &**U64x16,
+        do_std_bench,
+    );
     group.bench_with_input(
         BenchmarkId::new("std_on_64bit", 128),
-        &U64x128,
+        &**U64x128,
         do_std_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("std_on_64bit", 512),
-        &U64x512,
+        &**U64x512,
         do_std_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("std_on_64bit", 2048),
-        &U64x2048,
+        &**U64x2048,
         do_std_bench,
     );
     group.bench_with_input(
         BenchmarkId::new("std_on_64bit", 8192),
-        &U64x8192,
+        &**U64x8192,
         do_std_bench,
     );
     group.finish();

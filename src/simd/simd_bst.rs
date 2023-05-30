@@ -47,7 +47,7 @@ unsafe fn bst_8bits<T: SIMDField>(
     let keys = _mm256_set1_epi8(target.unchecked_i8());
     let end = nums.len() - 1;
     while left <= right {
-        let pivot = left + (right - left);
+        let pivot = (left + right) >> 1;
         if nums[pivot] == target {
             return Some(pivot);
         }
@@ -123,7 +123,7 @@ unsafe fn bst_16bits<T: SIMDField>(
     let keys = _mm256_set1_epi16(target.unchecked_i16());
     let end = nums.len() - 1;
     while left <= right {
-        let pivot = left + (right - left);
+        let pivot = (left + right) >> 1;
         if nums[pivot] == target {
             return Some(pivot);
         }
@@ -199,7 +199,7 @@ unsafe fn bst_32bits<T: SIMDField>(
     let keys = _mm256_set1_epi32(target.unchecked_i32());
     let end = nums.len() - 1;
     while left <= right {
-        let pivot = left + (right - left);
+        let pivot = (left + right) >> 1;
         if nums[pivot] == target {
             return Some(pivot);
         }
@@ -233,7 +233,7 @@ unsafe fn bst_32bits<T: SIMDField>(
             {
                 if left + 4 < end {
                     let v = _mm_loadu_si128((&nums[left..]).as_ptr() as *const _);
-                    let v = _mm_cmpeq_epi8(v, keys);
+                    let v = _mm_cmpeq_epi32(v, keys);
                     let mask = _mm_movemask_epi8(v);
                     if mask != 0 {
                         return Some(left + mask.trailing_zeros() as usize / 4);
@@ -275,7 +275,7 @@ unsafe fn bst_64bits<T: SIMDField>(
     let keys = _mm256_set1_epi64x(target.unchecked_i64());
     let end = nums.len() - 1;
     while left <= right {
-        let pivot = left + (right - left);
+        let pivot = (left + right) >> 1;
         if nums[pivot] == target {
             return Some(pivot);
         }
